@@ -210,8 +210,8 @@ The program draws a "42" pattern in the middle of the maze using locked cells. T
 
 ### Team Members
 
-- **ayafshar**: Co-developer - responsible for implementation, testing, and documentation
-- **eshinwar**: Co-developer - responsible for implementation, testing, and documentation
+- **ayafshar**: Co-developer - responsible for algorithm
+- **eshinwar**: Co-developer - responsible for Visualization
 
 ### Planning and Evolution
 
