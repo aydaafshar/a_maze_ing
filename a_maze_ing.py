@@ -5,7 +5,7 @@ from src.config import Config
 from mazegen import MazeGenerator
 
 
-def main():
+def main() -> None:
     from src.renderer import Renderer
 
     try:

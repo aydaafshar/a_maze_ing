@@ -89,12 +89,12 @@ class Maze:
         c.lock()
         self._enforce_borders_closed()
 
-    def reset(self):
+    def reset(self) -> None:
         for row in self.cells:
             for cell in row:
                 cell.reset()
 
-    def _draw_42(self):
+    def _draw_42(self) -> None:
         # rect 7x5
         H = 5
         W = 7

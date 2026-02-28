@@ -2,7 +2,7 @@ from mazegen.maze import Coord
 
 
 class Config:
-    def __init__(self):
+    def __init__(self) -> None:
         self.width: int = 20
         self.height: int = 15
         self.entry: Coord = (0, 0)

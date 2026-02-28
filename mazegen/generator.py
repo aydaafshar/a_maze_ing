@@ -78,7 +78,7 @@ class Genarator:
 
         return True
 
-    def _add_loops(self, visited: Set[Tuple[int, int]]):
+    def _add_loops(self, visited: Set[Tuple[int, int]]) -> None:
         num_loops = int(len(visited) * 0.1)
         attempts = 0
         max_attempts = num_loops * 10
@@ -102,7 +102,7 @@ class Genarator:
                         self.maze.carve(x, y, d)
                         num_loops -= 1
 
-    def generate(self, seed: int):
+    def generate(self, seed: int) -> None:
         self.maze.reset()
 
         random.seed(seed)

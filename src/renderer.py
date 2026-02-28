@@ -33,9 +33,9 @@ class Renderer:
             return "█"
         return f"{color}█{RESET}"
 
-    def render(self, solution: List[Coord] = []):
+    def render(self, solution: List[Coord] = []) -> None:
         self._path_set: Set[Coord] = set(solution)
-        self._path_edges: Set[FrozenSet] = set()
+        self._path_edges: Set[FrozenSet[Coord]] = set()
         for i in range(len(solution) - 1):
             self._path_edges.add(frozenset((solution[i], solution[i + 1])))
         w = self._wall_char()
@@ -59,7 +59,7 @@ class Renderer:
             return FROZEN
         return SPACE
 
-    def _render_cell_line(self, y: int):
+    def _render_cell_line(self, y: int) -> None:
         line = ""
         for x in range(self.maze.width):
             cell = self.maze.cells[y][x]
@@ -76,7 +76,7 @@ class Renderer:
                 line += self._wall_char() if cell.east else SPACE
         print(line)
 
-    def _render_wall_line(self, y: int):
+    def _render_wall_line(self, y: int) -> None:
         ny = y + 1
         line = ""
         for x in range(self.maze.width):

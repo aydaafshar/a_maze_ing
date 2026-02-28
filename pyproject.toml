@@ -19,3 +19,5 @@ dev = [
     "mypy>=1.8.0",
     "build>=1.0.0",
 ]
+[tool.mypy]
+exclude = '(^|/)\.venv/'
