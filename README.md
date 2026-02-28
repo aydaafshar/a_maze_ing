@@ -1,189 +1,286 @@
-*This project has been created as part of the 42 curriculum by ayafshar, eshinwar.*
+*This project has been created as part of the 42 curriculum by ayafshar and eshinwar.*
 
 # A-Maze-ing
 
+A terminal-based maze generator and solver that creates perfect mazes with a distinctive "42" pattern in the middle. The project generates random mazes, finds the shortest path from entry to exit, and provides an interactive visualization with colorful rendering.
+
 ## Description
 
-A-Maze-ing is a maze generation and solving application built in Python. The program generates random mazes using a randomized Depth-First Search (DFS) algorithm, solves them with BFS, and renders them in the terminal with ANSI color support. It supports both perfect mazes (exactly one solution) and imperfect mazes (with loops), configurable dimensions, entry/exit points, and reproducible generation via seeds.
+This maze generator creates procedurally generated mazes using the **Recursive Backtracker algorithm** (also known as Depth-First Search maze generation). The algorithm ensures that each maze is a perfect maze - meaning there is exactly one unique path between any two points in the maze, with no loops or inaccessible areas (unless configured otherwise).
 
-The core maze logic is packaged as `mazegen`, a standalone pip-installable Python module with zero external dependencies, making it easy to reuse in other projects.
+The program draws a colored "42" logo in the center of the maze by locking specific cells, which the generator must work around. The maze can be visualized in the terminal with ASCII characters, and users can interact with it to regenerate mazes, toggle solution paths, and change wall colors.
 
 ## Instructions
 
-### Requirements
+### Installation
 
-- Python 3.9+
-- [uv](https://docs.astral.sh/uv/) package manager
-
-### Installation and Running
+This project uses `uv` for dependency management. To install dependencies:
 
 ```bash
-make install   # Install dependencies
-make run       # Run the application
+make install
 ```
 
-You can also pass a custom config file:
+Or manually:
+```bash
+uv sync --dev
+```
+
+### Running the Program
+
+To run the interactive maze application:
 
 ```bash
-uv run python a_maze_ing.py my_config.txt
+make run
 ```
 
-### Interactive Menu
-
-Once running, the application presents an interactive menu:
-
-1. **Re-generate** - Generate a new maze with a random seed
-2. **Show/Hide solution** - Toggle the solution path overlay
-3. **Rotate colors** - Cycle through wall color schemes (None, Yellow, Gray, White)
-4. **Quit** - Exit the application
-
-### Other Makefile Targets
-
+Or directly:
 ```bash
-make clean        # Remove build artifacts and __pycache__
-make lint         # Run flake8 and mypy
-make lint-strict  # Run mypy in strict mode
-make build        # Build the mazegen pip package
+python3 a_maze_ing.py
 ```
 
-## Configuration File
+### Configuration File Format
 
-Edit `config.txt` to customize maze parameters. The format is simple `KEY=VALUE` pairs, with optional `#` comments:
+The maze behavior is controlled by a `config.txt` file in the root directory:
 
 ```
 # Maze configuration
-WIDTH=20              # Maze width in cells (integer)
-HEIGHT=15             # Maze height in cells (integer)
-ENTRY=4,0             # Entry point as x,y coordinates
-EXIT=10,10            # Exit point as x,y coordinates
-OUTPUT_FILE=maze.txt  # Path for the output maze file
-PERFECT=True          # True = perfect maze (no loops), False = ~10% random loops
+WIDTH=15           # Width of the maze (number of cells)
+HEIGHT=10          # Height of the maze (number of cells)
+ENTRY=0,0          # Entry coordinates (x,y)
+EXIT=7,7           # Exit coordinates (x,y)
+OUTPUT_FILE=maze.txt   # Output file name for the maze data
+PERFECT=True       # True for perfect maze, False to add loops
 ```
 
-| Key           | Type        | Default              | Description                                    |
-|---------------|-------------|----------------------|------------------------------------------------|
-| `WIDTH`       | int         | 20                   | Maze width in cells                            |
-| `HEIGHT`      | int         | 15                   | Maze height in cells                           |
-| `ENTRY`       | x,y         | 0,0                  | Entry point coordinates                        |
-| `EXIT`        | x,y         | width-1, height-1    | Exit point coordinates                         |
-| `OUTPUT_FILE` | string      | maze.txt             | Output file path for serialized maze           |
-| `PERFECT`     | bool        | True                 | Perfect maze (no loops) or imperfect (~10% loops) |
+- **WIDTH** and **HEIGHT**: Define the maze dimensions in cells
+- **ENTRY** and **EXIT**: Coordinates (x,y) for start and end points
+- **OUTPUT_FILE**: Name of the file where maze data is saved
+- **PERFECT**: If `True`, generates a perfect maze; if `False`, adds some loops (~10% extra passages)
+
+### Interactive Commands
+
+Once the program is running, you can:
+
+1. **Re-generate a new maze** - Creates a new random maze with a different seed
+2. **Show/Hide path from entry to exit** - Toggle visualization of the shortest solution path (blue)
+3. **Rotate maze colors** - Cycle through different wall color schemes (default, yellow, red, white)
+4. **Quit** - Exit the program
+
+### Building the Package
+
+To build the reusable `mazegen` package:
+
+```bash
+uv build
+```
+
+This creates a `.whl` file in the `dist/` directory that can be installed with pip.
+
+### Linting
+
+To check code quality:
+
+```bash
+make lint        # Standard linting
+make lint-strict # Strict mode with all checks
+```
 
 ## Maze Generation Algorithm
 
-### Algorithm: Randomized Depth-First Search (DFS)
+### Algorithm: Recursive Backtracker (Depth-First Search)
 
-The maze is generated using a **Randomized Depth-First Search** (also known as recursive backtracker) algorithm:
+The Recursive Backtracker is one of the most popular maze generation algorithms. It works by:
 
-1. Start at a random cell on the grid.
-2. Mark the current cell as visited.
-3. Randomly pick an unvisited neighbor, carve a passage to it, and move there.
-4. If no unvisited neighbors remain, backtrack via the stack until one is found.
-5. Repeat until all cells have been visited.
+1. Starting at a random unlocked cell
+2. Marking the current cell as visited
+3. Randomly choosing an unvisited neighbor and carving a path to it
+4. Moving to that neighbor and repeating
+5. Backtracking when there are no unvisited neighbors
+6. Continuing until all cells are visited
 
-This produces a **spanning tree** of the grid, which guarantees a perfect maze: exactly one path between any two cells.
+### Why This Algorithm?
 
-For **imperfect mazes** (`PERFECT=False`), approximately 10% of remaining walls are randomly removed to introduce loops and multiple solution paths.
+I chose the Recursive Backtracker algorithm for several reasons:
 
-An additional constraint prevents **wide corridors**: before carving into a cell, the algorithm checks whether doing so would create a 3x3 open area, preserving the classic narrow-corridor feel.
+- **Simplicity**: Easy to understand and implement, making the code maintainable
+- **Perfect Mazes**: Naturally creates perfect mazes (one path between any two points)
+- **Long Passages**: Creates mazes with long, winding corridors that are visually interesting
+- **Efficient**: Fast generation even for large mazes
+- **Stack-based**: No recursion limits since it uses an explicit stack
 
-The **solver** uses Breadth-First Search (BFS) to find the shortest path from entry to exit.
+The algorithm also includes a custom enhancement to prevent wide corridors (3x3 open areas), making the mazes more challenging and visually appealing.
 
-### Why This Algorithm
+### Optional Loop Generation
 
-- **Simplicity**: DFS-based generation is straightforward to implement and understand.
-- **Quality**: It produces mazes with long, winding corridors and few dead-end clusters, which are visually appealing and interesting to solve.
-- **Flexibility**: Easy to extend with loop injection for imperfect mazes.
-- **Reproducibility**: Combined with a seeded random number generator, the same seed always produces the exact same maze.
+When `PERFECT=False`, the generator adds approximately 10% additional passages after the initial generation, creating alternative paths and making the maze easier to solve.
 
-## Reusable Module: `mazegen`
+## Code Reusability
 
-The `mazegen/` directory is a standalone, pip-installable Python package with **zero external dependencies**. It can be used independently in any Python project that needs maze generation or solving.
+### Reusable Module: `mazegen`
 
-### Installation
+The entire maze generation, solving, and rendering logic is contained in the `mazegen` module, which includes:
 
-```bash
-# Install directly from source
-pip install .
+- **`Maze`**: Core maze data structure with cells and walls
+- **`Genarator`**: Maze generation using recursive backtracker
+- **`Solver`**: Finds the shortest path using breadth-first search
+- **`Renderer`**: Terminal-based visualization with colors
+- **`Writer`**: Exports maze data to file format
+- **`Config`**: Configuration management from file
+- **`Cell`**: Individual cell with wall states and locking
+- **`Direction`**: Enum for cardinal directions
 
-# Or build and install the wheel
-pip install build
-python -m build
-pip install dist/mazegen-1.0.0-py3-none-any.whl
-```
-
-### Usage
+### Using the Module
 
 ```python
-from mazegen import MazeGenerator
+from mazegen.config import Config
+from mazegen.maze import Maze
+from mazegen.generator import Genarator
+from mazegen.solver import Solver
+from mazegen.renderer import Renderer
 
-# Default maze (20x15, seed=42, perfect)
-mg = MazeGenerator()
+# Load configuration
+config = Config()
+config.load("config.txt")
 
-# Custom maze
-mg = MazeGenerator(width=30, height=20, seed=123, perfect=False)
+# Create and generate maze
+maze = Maze(config)
+generator = Genarator(maze)
+generator.generate(seed=42)
 
-# Access cell walls
-north, east, south, west = mg.cell_walls(5, 3)
+# Solve and render
+solver = Solver(maze)
+solution = solver.solve()
 
-# Get solution path as list of (x, y) coordinates
-path = mg.solution
-
-# Regenerate with a new seed
-mg.regenerate(seed=99)
-
-# Save to file
-mg.save("output.txt")
+renderer = Renderer(maze)
+renderer.render(solution)
 ```
 
-### Package Structure
+### Custom Parameters
 
-| Module         | Purpose                                        |
-|----------------|------------------------------------------------|
-| `__init__.py`  | `MazeGenerator` class - high-level API         |
-| `maze.py`      | `Maze` data structure (2D grid of cells)       |
-| `cell.py`      | `Cell` class with wall states and hex encoding |
-| `direction.py` | `Direction` enum (N, E, S, W)                  |
-| `generator.py` | DFS maze generation algorithm                  |
-| `solver.py`    | BFS shortest-path solver                       |
-| `writer.py`    | Maze serialization to hex-encoded file format  |
+You can also create mazes programmatically:
+
+```python
+config = Config()
+config.width = 30
+config.height = 20
+config.entry = (0, 0)
+config.exit = (29, 19)
+config.perfect = True
+
+maze = Maze(config)
+generator = Genarator(maze)
+generator.generate(seed=12345)
+
+solver = Solver(maze)
+solution = solver.solve()
+```
+
+### Accessing Generated Data
+
+- **Maze structure**: Access cells via `maze.cells[y][x]`
+- **Cell walls**: Check walls with `cell.north`, `cell.east`, `cell.south`, `cell.west` (boolean values)
+- **Locked cells**: Check if a cell is part of the "42" pattern with `cell.locked`
+- **Solution path**: The `solver.solve()` returns a list of `(x, y)` coordinates representing the shortest path
+- **Export to file**: Use `Writer(maze).save(solution)` to save in the hexadecimal format specified in the subject
+
+### Output File Format
+
+The generated maze is saved in a compact hexadecimal format:
+
+- First line: `WIDTH HEIGHT`
+- Following lines: Each cell's walls encoded as a hex digit (N=1, E=2, S=4, W=8)
+- After an empty line: entry coordinates, exit coordinates, and solution path (using N/E/S/W letters)
+
+## Visual Features
+
+### Color Scheme
+
+- **Green (█)**: Entry point
+- **Red (█)**: Exit point
+- **Blue (█)**: Solution path when toggled
+- **Cyan (▒)**: The digit "4" in the center
+- **Magenta (▒)**: The digit "2" in the center
+- **Wall colors**: Rotatable between default, yellow, red, and white
+
+### The "42" Pattern
+
+The program draws a "42" pattern in the middle of the maze using locked cells. The pattern requires at least an 8x6 maze to display properly. The "4" is rendered in cyan and the "2" in magenta, making them visually distinct and more aesthetically pleasing.
 
 ## Team and Project Management
 
-### Team Roles
+### Team Members
 
-| Member       | Responsibilities                                         |
-|--------------|----------------------------------------------------------|
-| **ayafshar** | Maze generation algorithm, solver algorithm              |
-| **eshinwar** | Configuration parser, terminal renderer, output writer   |
+- **ayafshar**: Co-developer - responsible for implementation, testing, and documentation
+- **eshinwar**: Co-developer - responsible for implementation, testing, and documentation
 
-### Planning and Process
+### Planning and Evolution
 
-We started by breaking the project down into clearly separated tasks based on each member's role. After completing each phase, we held **pair programming sessions** to walk each other through our code, share knowledge, and ensure both members understood the full codebase.
+**Initial Plan:**
+- Day 1-2: Understand requirements and design data structures
+- Day 3-4: Implement maze generation algorithm
+- Day 5: Implement solver and file writer
+- Day 6-7: Create interactive UI and renderer
+- Day 8: Testing, refinement, and documentation
 
-**What worked well:**
-- The clear task separation allowed us to work in parallel without conflicts.
-- Pair programming sessions after each phase kept both members aligned and helped catch issues early.
+**Evolution:**
+The project followed the plan closely, with additional time spent on:
+- Preventing wide corridors (3x3 open areas) for better maze quality
+- Fine-tuning the "42" pattern to look aesthetically pleasing
+- Adding color differentiation between the digits "4" and "2"
+- Ensuring proper handling of locked cells in the generator
 
-**What could be improved:**
-- Code readability could be improved with more consistent naming and documentation across modules.
+### What Worked Well
 
-### Tools
+- Clear separation of concerns (generator, solver, renderer, writer)
+- Using dataclasses for clean, simple data structures
+- The recursive backtracker algorithm was straightforward to implement
+- The BFS solver reliably finds shortest paths
+- Terminal rendering with ANSI colors provides good visual feedback
+- Type hints throughout the codebase improved maintainability
 
-- **GitHub** - Version control and collaboration
-- **WhatsApp** - Communication and coordination
+### What Could Be Improved
+
+- Could add animation during maze generation to show the algorithm in action
+- Could support multiple generation algorithms (Prim's, Kruskal's, etc.)
+- Could add more interactive features (manual solving, hints, step-by-step visualization)
+- Could implement graphical rendering with MiniLibX as a bonus
+- Could add unit tests for better code coverage
+
+### Tools Used
+
+- **uv**: Fast Python package manager for dependency management
+- **flake8**: Code linting to maintain style consistency (PEP 8)
+- **mypy**: Static type checking for better code quality and type safety
+- **git**: Version control for tracking changes
+- **Python 3+**: Programming language with modern type hints support
 
 ## Resources
 
-- [Maze generation algorithm - Wikipedia](https://en.wikipedia.org/wiki/Maze_generation_algorithm) - Overview of maze generation techniques including DFS
-- [Think Labyrinth - Maze algorithms](http://www.astrolog.org/labyrnth/algrithm.htm) - Comprehensive reference on maze algorithms
-- [Breadth-First Search - Wikipedia](https://en.wikipedia.org/wiki/Breadth-first_search) - BFS algorithm used for solving
+### Classic References
+
+- **Maze Generation Algorithms**: 
+  - [Think Labyrinth - Maze Algorithms](http://www.astrolog.org/labyrnth/algrithm.htm)
+  - [Jamis Buck's Maze Generation Series](https://weblog.jamisbuck.org/2011/2/7/maze-generation-algorithm-recap)
+  - [Wikipedia: Maze Generation Algorithm](https://en.wikipedia.org/wiki/Maze_generation_algorithm)
+  
+- **Graph Theory**:
+  - Introduction to Algorithms (CLRS) - Chapter on Graph Algorithms and DFS
+  - [Spanning Trees and Perfect Mazes](https://en.wikipedia.org/wiki/Spanning_tree)
+
+- **Python Documentation**:
+  - [Python Data Structures](https://docs.python.org/3/tutorial/datastructures.html)
+  - [Type Hints](https://docs.python.org/3/library/typing.html)
+  - [Dataclasses](https://docs.python.org/3/library/dataclasses.html)
 
 ### AI Usage
 
-AI (Claude) was used during this project for the following tasks:
+AI tools were used for the following tasks:
 
-- **Requirement extraction**: Translating and clarifying project requirements from the subject document, which was difficult to parse due to translation issues.
-- **Algorithm research**: Getting recommendations on which algorithms are commonly used for maze generation and their trade-offs, which informed the choice of Randomized DFS.
+- **Documentation**: AI assisted in structuring the README and explaining technical concepts clearly in an accessible way
+- **Testing scenarios**: AI helped generate test cases for various maze configurations and edge cases (small mazes, entry/exit on borders, etc.)
+- **Readme refactoring**: AI provided suggestions for improving readme structure and type annotations
 
-AI was not used to directly write the project code.
+
+## License
+
+This project is part of the 42 curriculum and follows 42 school guidelines.
